@@ -7,7 +7,6 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="LuckPerms-Bukkit-5.2.19" level="project" />
     <orderEntry type="library" name="patched_1.16.4" level="project" />
   </component>
 </module>

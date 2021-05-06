@@ -6,10 +6,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.UUID;
 
-import net.luckperms.api.LuckPerms;
-import net.luckperms.api.cacheddata.CachedMetaData;
-import net.luckperms.api.context.ContextManager;
-import net.luckperms.api.query.QueryOptions;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -20,39 +16,19 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerLoginEvent.Result;
 import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class MySQLWhitelist extends JavaPlugin implements Listener {
     public static MySQLWhitelist plugin;
     public static Connection connection;
-    public static LuckPerms luckperms;
-
-    @Override
-    public void onDisable(){
-        PluginDescriptionFile pdfFile = this.getDescription();
-        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', ""));
-        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&6" + this.getName() + " &f| &cDisabled!"));
-        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&6" + this.getName() + " &f| &fBy &6vk.com/thealeksbl4ckr"));
-        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', ""));
-        final RegisteredServiceProvider<LuckPerms> provider = (RegisteredServiceProvider<LuckPerms>)Bukkit.getServicesManager().getRegistration((Class)LuckPerms.class);
-        MySQLWhitelist.luckperms = (LuckPerms)provider.getProvider();
-        try {
-            if(connection == null && !connection.isClosed()){
-                connection.close();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     @Override
     public void onEnable(){
         PluginDescriptionFile pdfFile = this.getDescription();
-        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', ""));
-        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&6" + this.getName() + " &f| &aEnabled!"));
-        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&6" + this.getName() + " &f| &fBy &6vk.com/thealeksbl4ckr"));
-        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', ""));
+        Utils.log("");
+        Utils.log("&6" + this.getName() + " &f| &aENABLED!");
+        Utils.log("&6" + this.getName() + " &f| &fBy &6vk.com/thealeksbl4ckr");
+        Utils.log("");
         getServer().getPluginManager().registerEvents(this, this);
         this.saveDefaultConfig();
 
@@ -65,6 +41,99 @@ public class MySQLWhitelist extends JavaPlugin implements Listener {
         } finally{
             closeConnection();
         }
+    }
+
+    @Override
+    public void onDisable(){
+        PluginDescriptionFile pdfFile = this.getDescription();
+        Utils.log("");
+        Utils.log("&6" + this.getName() + " &f| &4DISABLED!");
+        Utils.log("&6" + this.getName() + " &f| &fBy &6vk.com/thealeksbl4ckr");
+        Utils.log("");
+        try {
+            if(connection == null && !connection.isClosed()){
+                connection.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, final String[] args){
+        if(commandLabel.equalsIgnoreCase("awl") || commandLabel.equalsIgnoreCase("whitelist")){
+            if(args.length >= 1){
+                if(args[0].equalsIgnoreCase("add")){
+                    if(sender.hasPermission("aWL.del") || sender.isOp() || sender.hasPermission("aWL.*")){
+                        if(args.length == 2){
+                            if(sender.getServer().getPlayer(args[1]) != null){
+                                addWhitelistOnline(sender.getServer().getPlayer(args[1]), sender);
+                            }else{
+                                addWhitelistOffline(args[1], sender);
+                            }
+                        }else{
+                            sender.sendMessage(this.getConfig().getString("msg.add").replace("&", "§"));
+                        }
+                    }else{
+                        sender.sendMessage(this.getConfig().getString("msg.perm").replace("&", "§"));
+                    }
+                }else if(args[0].equalsIgnoreCase("del") || commandLabel.equalsIgnoreCase("remove")){
+                    if(sender.hasPermission("aWL.del") || sender.isOp() || sender.hasPermission("aWL.*")){
+                        if(args.length == 2){
+                            if(sender.getServer().getPlayer(args[1]) != null){
+                                delWhitelistOnline(sender.getServer().getPlayer(args[1]), sender);
+                            }else{
+                                delWhitelistOffline(args[1], sender);
+                            }
+                        }else{
+                            sender.sendMessage(this.getConfig().getString("msg.del").replace("&", "§"));
+                        }
+                    }else{
+                        sender.sendMessage(this.getConfig().getString("msg.perm").replace("&", "§"));
+                    }
+                }else if(args[0].equalsIgnoreCase("reload")){
+                    if(sender.hasPermission("aWL.reload") || sender.isOp() || sender.hasPermission("aWL.*")){
+                        this.reloadConfig();
+                        sender.sendMessage(this.getConfig().getString("msg.reloadwl").replace("&", "§"));
+                    }else{
+                        sender.sendMessage(this.getConfig().getString("msg.perm").replace("&", "§"));
+                    }
+                }else if(args[0].equalsIgnoreCase("on")){
+                    if(sender.hasPermission("aWL.enable") || sender.isOp() || sender.hasPermission("aWL.*")){
+                        this.getConfig().set("enabled", true);
+                        sender.sendMessage(this.getConfig().getString("msg.onwl").replace("&", "§"));
+                    }else{
+                        sender.sendMessage(this.getConfig().getString("msg.perm").replace("&", "§"));
+                    }
+                }else if(args[0].equalsIgnoreCase("off")){
+                    if(sender.hasPermission("aWL.disable") || sender.isOp() || sender.hasPermission("aWL.*")){
+                        this.getConfig().set("enabled", false);
+                        sender.sendMessage(this.getConfig().getString("msg.offwl").replace("&", "§"));
+                    }else{
+                        sender.sendMessage(this.getConfig().getString("msg.perm").replace("&", "§"));
+                    }
+                }else{
+                    sender.sendMessage(this.getConfig().getString("msg.usage").replace("&", "§"));
+                }
+            }else{
+                sender.sendMessage(this.getConfig().getString("msg.usage").replace("&", "§"));
+            }
+            return true;
+        }
+        return false;
+    }
+
+
+    @EventHandler
+    public void onPlayerLogin(PlayerLoginEvent event){
+        Player player = event.getPlayer();
+        if(!isWhitelisted(player)){
+            if(this.getConfig().getBoolean("enabled")){
+                event.setKickMessage(this.getConfig().getString("msg.kick").replace("&", "§"));
+                event.setResult(Result.KICK_WHITELIST);
+            }
+        }
+
     }
 
 
@@ -126,10 +195,6 @@ public class MySQLWhitelist extends JavaPlugin implements Listener {
     }
 
     public void addWhitelistOnline(Player player, CommandSender sender){
-        final ContextManager cm = MySQLWhitelist.luckperms.getContextManager();
-        final QueryOptions queryOptions = cm.getQueryOptions(MySQLWhitelist.luckperms.getUserManager().getUser(player.getPlayer().getUniqueId())).orElse(cm.getStaticQueryOptions());
-        final CachedMetaData metaData = MySQLWhitelist.luckperms.getUserManager().getUser(player.getPlayer().getUniqueId()).getCachedData().getMetaData(queryOptions);
-        final CachedMetaData cachedMetaData;
         openConnection();
         try{
             PreparedStatement sql = connection.prepareStatement("SELECT * FROM `" + getConfig().getString("table") + "` WHERE `UUID`=?;");
@@ -199,78 +264,5 @@ public class MySQLWhitelist extends JavaPlugin implements Listener {
         }finally{
             closeConnection();
         }
-    }
-    public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, final String[] args){
-        if(commandLabel.equalsIgnoreCase("awl") || commandLabel.equalsIgnoreCase("whitelist")){
-            if(args.length >= 1){
-                if(args[0].equalsIgnoreCase("add")){
-                    if(sender.hasPermission("aWL.del") || sender.isOp() || sender.hasPermission("aWL.*")){
-                        if(args.length == 2){
-                            if(sender.getServer().getPlayer(args[1]) != null){
-                                addWhitelistOnline(sender.getServer().getPlayer(args[1]), sender);
-                            }else{
-                                addWhitelistOffline(args[1], sender);
-                            }
-                        }else{
-                            sender.sendMessage(this.getConfig().getString("msg.add").replace("&", "§"));
-                        }
-                    }else{
-                        sender.sendMessage(this.getConfig().getString("msg.perm").replace("&", "§"));
-                    }
-                }else if(args[0].equalsIgnoreCase("del") || commandLabel.equalsIgnoreCase("remove")){
-                    if(sender.hasPermission("aWL.del") || sender.isOp() || sender.hasPermission("aWL.*")){
-                        if(args.length == 2){
-                            if(sender.getServer().getPlayer(args[1]) != null){
-                                delWhitelistOnline(sender.getServer().getPlayer(args[1]), sender);
-                            }else{
-                                delWhitelistOffline(args[1], sender);
-                            }
-                        }else{
-                            sender.sendMessage(this.getConfig().getString("msg.del").replace("&", "§"));
-                        }
-                    }else{
-                        sender.sendMessage(this.getConfig().getString("msg.perm").replace("&", "§"));
-                    }
-                }else if(args[0].equalsIgnoreCase("reload")){
-                    if(sender.hasPermission("aWL.reload") || sender.isOp() || sender.hasPermission("aWL.*")){
-                        this.reloadConfig();
-                        sender.sendMessage(this.getConfig().getString("msg.reloadwl").replace("&", "§"));
-                    }else{
-                        sender.sendMessage(this.getConfig().getString("msg.perm").replace("&", "§"));
-                    }
-                }else if(args[0].equalsIgnoreCase("on")){
-                    if(sender.hasPermission("aWL.enable") || sender.isOp() || sender.hasPermission("aWL.*")){
-                        this.getConfig().set("enabled", true);
-                        sender.sendMessage(this.getConfig().getString("msg.onwl").replace("&", "§"));
-                    }else{
-                        sender.sendMessage(this.getConfig().getString("msg.perm").replace("&", "§"));
-                    }
-                }else if(args[0].equalsIgnoreCase("off")){
-                    if(sender.hasPermission("aWL.disable") || sender.isOp() || sender.hasPermission("aWL.*")){
-                        this.getConfig().set("enabled", false);
-                        sender.sendMessage(this.getConfig().getString("msg.offwl").replace("&", "§"));
-                    }else{
-                        sender.sendMessage(this.getConfig().getString("msg.perm").replace("&", "§"));
-                    }
-                }else{
-                    sender.sendMessage(this.getConfig().getString("msg.usage").replace("&", "§"));
-                }
-            }else{
-                sender.sendMessage(this.getConfig().getString("msg.usage").replace("&", "§"));
-            }
-            return true;
-        }
-        return false;
-    }
-    @EventHandler
-    public void onPlayerLogin(PlayerLoginEvent event){
-        Player player = event.getPlayer();
-        if(!isWhitelisted(player)){
-            if(this.getConfig().getBoolean("enabled")){
-                event.setKickMessage(this.getConfig().getString("msg.kick").replace("&", "§"));
-                event.setResult(Result.KICK_WHITELIST);
-            }
-        }
-
     }
 }
