@@ -1,6 +1,6 @@
 <component name="ArtifactManager">
   <artifact type="jar" name="aWL">
-    <output-path>$USER_HOME$/Desktop/TestServer/plugins</output-path>
+    <output-path>$PROJECT_DIR$/../../Новая папка (3)/plugins</output-path>
     <root id="archive" name="aWL.jar">
       <element id="module-output" name="aWL" />
     </root>

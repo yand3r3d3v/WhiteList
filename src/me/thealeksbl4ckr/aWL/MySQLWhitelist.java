@@ -4,8 +4,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
+import de.leonhard.storage.Json;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -19,15 +22,18 @@ import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class MySQLWhitelist extends JavaPlugin implements Listener {
+
     public static MySQLWhitelist plugin;
     public static Connection connection;
+    List<String> users = new ArrayList<>();
+
 
     @Override
     public void onEnable(){
-        PluginDescriptionFile pdfFile = this.getDescription();
         Utils.log("");
-        Utils.log("&6" + this.getName() + " &f| &aENABLED!");
-        Utils.log("&6" + this.getName() + " &f| &fBy &6vk.com/thealeksbl4ckr");
+        Utils.log("&9▄▀▄&f █░░ ▄▀▄ ▄▀▄ █▀▄ █▀▀ █▀▀▄");
+        Utils.log("&9█░█&f █░▄ █░█ █▀█ █░█ █▀▀ █▐█▀ &9" + this.getName() + " &fv" + this.getDescription().getVersion());
+        Utils.log("&9░▀░&f ▀▀▀ ░▀░ ▀░▀ ▀▀░ ▀▀▀ ▀░▀▀ &fRunning on &a" + this.getServer().getBukkitVersion() + " &8- &e" + this.getServer().getName());
         Utils.log("");
         getServer().getPluginManager().registerEvents(this, this);
         this.saveDefaultConfig();
@@ -36,6 +42,9 @@ public class MySQLWhitelist extends JavaPlugin implements Listener {
         try{
             PreparedStatement sql = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `" + getConfig().getString("table") + "` (`UUID` varchar(100), `user` varchar(100)) ;");
             sql.execute();
+
+            getUsers();
+            Utils.log("&8| &fИгроков загружено &a" + users.size());
         } catch(Exception e){
             e.printStackTrace();
         } finally{
@@ -45,30 +54,49 @@ public class MySQLWhitelist extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable(){
-        PluginDescriptionFile pdfFile = this.getDescription();
-        Utils.log("");
-        Utils.log("&6" + this.getName() + " &f| &4DISABLED!");
-        Utils.log("&6" + this.getName() + " &f| &fBy &6vk.com/thealeksbl4ckr");
-        Utils.log("");
         try {
             if(connection == null && !connection.isClosed()){
                 connection.close();
+                users.clear();
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    public List<String> getUsers() {
+        openConnection();
+        try{
+            PreparedStatement sql = connection.prepareStatement("SELECT * FROM `" + getConfig().getString("table"));
+            ResultSet rs = sql.executeQuery();
+            while (rs.next()) {
+                users.add(rs.getString("user"));
+            }
+            rs.close();
+            sql.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, final String[] args){
         if(commandLabel.equalsIgnoreCase("awl") || commandLabel.equalsIgnoreCase("whitelist")){
             if(args.length >= 1){
-                if(args[0].equalsIgnoreCase("add")){
+                if(args[0].equalsIgnoreCase("list")) {
+                    if(sender.hasPermission("awl.list") || sender.isOp() || sender.hasPermission("aWL.*")) {
+                        sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&caWL &8| &fИгроки &a" + users.size() +  " &6" + users));
+                    }
+                }
+                else if(args[0].equalsIgnoreCase("add")){
                     if(sender.hasPermission("aWL.del") || sender.isOp() || sender.hasPermission("aWL.*")){
                         if(args.length == 2){
                             if(sender.getServer().getPlayer(args[1]) != null){
                                 addWhitelistOnline(sender.getServer().getPlayer(args[1]), sender);
+                                users.add(args[1]);
                             }else{
+                                users.add(args[1]);
                                 addWhitelistOffline(args[1], sender);
                             }
                         }else{
@@ -82,7 +110,9 @@ public class MySQLWhitelist extends JavaPlugin implements Listener {
                         if(args.length == 2){
                             if(sender.getServer().getPlayer(args[1]) != null){
                                 delWhitelistOnline(sender.getServer().getPlayer(args[1]), sender);
+                                users.remove(args[1]);
                             }else{
+                                users.remove(args[1]);
                                 delWhitelistOffline(args[1], sender);
                             }
                         }else{
@@ -154,43 +184,10 @@ public class MySQLWhitelist extends JavaPlugin implements Listener {
     }
 
     public boolean isWhitelisted(Player player){
-        openConnection();
-        try{
-            PreparedStatement sql = connection.prepareStatement("SELECT * FROM `" + getConfig().getString("table") + "` WHERE `UUID`=?;");
-            UUID uuid = player.getUniqueId();
-            sql.setString(1, uuid.toString());
-            ResultSet rs = sql.executeQuery();
-            if(rs.next()){
-                PreparedStatement sql4 = connection.prepareStatement("UPDATE `" + getConfig().getString("table") + "` SET `user`=? WHERE `UUID`=?;");
-                sql4.setString(1, player.getName());
-                sql4.setString(2, uuid.toString());
-                sql4.executeUpdate();
-                sql4.close();
-                sql.close();
-                rs.close();
-                return true;
-            }else{
-                PreparedStatement sql2 = connection.prepareStatement("SELECT * FROM `" + getConfig().getString("table") + "` WHERE `user`=? && `UUID` IS NULL;");
-                sql2.setString(1, player.getName());
-                ResultSet rs2 = sql2.executeQuery();
-                if(rs2.next()){
-                    PreparedStatement sql3 = connection.prepareStatement("UPDATE `" + getConfig().getString("table") + "` SET `UUID`=? WHERE `user`=?;");
-                    sql3.setString(1, uuid.toString());
-                    sql3.setString(2, player.getName());
-                    sql3.executeUpdate();
-                    sql2.close();
-                    rs2.close();
-                    sql3.close();
-                    return true;
-                }else{
-                    return false;
-                }
-            }
-        }catch(Exception e){
-            e.printStackTrace();
+        if(users.contains(player.getName())) {
+            return true;
+        } else {
             return false;
-        }finally{
-            closeConnection();
         }
     }
 
@@ -211,7 +208,7 @@ public class MySQLWhitelist extends JavaPlugin implements Listener {
             sql.close();
             sender.sendMessage(this.getConfig().getString("msg.addwl").replace("%player%", player.getDisplayName()).replace("&", "§"));
         }catch(Exception e){
-            e.printStackTrace();;
+            e.printStackTrace();
         }finally{
             closeConnection();
         }
@@ -231,7 +228,7 @@ public class MySQLWhitelist extends JavaPlugin implements Listener {
             sql.close();
             sender.sendMessage(this.getConfig().getString("msg.addwl").replace("%player%", player).replace("&", "§"));
         }catch(Exception e){
-            e.printStackTrace();;
+            e.printStackTrace();
         }finally{
             closeConnection();
         }
@@ -246,7 +243,7 @@ public class MySQLWhitelist extends JavaPlugin implements Listener {
             sql.close();
             sender.sendMessage(this.getConfig().getString("msg.delwl").replace("%player%", player.getDisplayName()).replace("&", "§"));
         }catch(Exception e){
-            e.printStackTrace();;
+            e.printStackTrace();
         }finally{
             closeConnection();
         }
@@ -260,7 +257,7 @@ public class MySQLWhitelist extends JavaPlugin implements Listener {
             sql.close();
             sender.sendMessage(this.getConfig().getString("msg.delwl").replace("%player%", player).replace("&", "§"));
         }catch(Exception e){
-            e.printStackTrace();;
+            e.printStackTrace();
         }finally{
             closeConnection();
         }
