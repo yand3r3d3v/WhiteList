@@ -10,12 +10,12 @@ enabled: true
 
 msg:
   perm: '&caWL &8| &fУ вас &7нет &fправ'
-  addwl: '&caWL &8| &fИгрок &7%player% &fДобавлен в &7белый &fсписок'
+  addtowhitelist: '&caWL &8| &fИгрок &7%player% &fДобавлен в &7белый &fсписок'
   delwl: '&caWL &8| &fИгрок &7%player% &fУдалён из &7белого &fсписока'
   kick: '&caWL &8| &fВас &7нет &fв белом списке. &fПодать заявку &7vk.com/abcore'
   usage: '&caWL &8| &fИспользование &7/awl add/del (ник) &8| /awl on/off/reload'
-  onwl: '&caWL &8| &fБелый список &7включён'
-  offwl: '&caWL &8| &fБелый список &7выключен'
-  reloadwl: '&caWL &8| &fБелый список &7перезагружен'
+  enable: '&caWL &8| &fБелый список &7включён'
+  disable: '&caWL &8| &fБелый список &7выключен'
+  reload: '&caWL &8| &fБелый список &7перезагружен'
   del: '&caWL &8| &fИспользование &7/awl del (ник)'
   add: '&caWL &8| &fИспользование &7/awl add (ник)'
