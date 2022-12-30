@@ -1,27 +1,7 @@
 name: aWL
-main: me.thealeksbl4ckr.aWL.MySQLWhitelist
+main: me.thealeksbl4ckr.oWhiteList.Main
 version: 0.2
 
 commands:
-  awl:
-    aliases:
-    - awhitelist
-    - whitelist
-permissions:
-  aWL.*:
-    children:
-      abWL.add: true
-      abWL.del: true
-      abWL.on: true
-      abWL.off: true
-      abWL.reload: true
-  aWL.add:
-    default: op
-  aWL.del:
-    default: op
-  aWL.on:
-    default: op
-  aWL.off:
-    default: op
-  aWL.reload:
-    default: op
+  whitelist:
+    description: 'Основная команда плагина'

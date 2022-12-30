@@ -5,17 +5,19 @@ database: test
 port: 3306
 table: awl_whitelist
 
-#stats
-enabled: true
+#status
+enabled: false
 
+
+# Право: whitelist.*
 msg:
-  perm: '&caWL &8| &fУ вас &7нет &fправ'
-  addtowhitelist: '&caWL &8| &fИгрок &7%player% &fДобавлен в &7белый &fсписок'
-  delwl: '&caWL &8| &fИгрок &7%player% &fУдалён из &7белого &fсписока'
-  kick: '&caWL &8| &fВас &7нет &fв белом списке. &fПодать заявку &7vk.com/abcore'
-  usage: '&caWL &8| &fИспользование &7/awl add/del (ник) &8| /awl on/off/reload'
-  enable: '&caWL &8| &fБелый список &7включён'
-  disable: '&caWL &8| &fБелый список &7выключен'
-  reload: '&caWL &8| &fБелый список &7перезагружен'
-  del: '&caWL &8| &fИспользование &7/awl del (ник)'
-  add: '&caWL &8| &fИспользование &7/awl add (ник)'
+  perm: '&cWHITELIST &8| &fУ вас &7нет &fправ'
+  addtowhitelist: '&cWHITELIST &8| &fИгрок &7%player% &fДобавлен в &7белый &fсписок'
+  delwl: '&cWHITELIST &8| &fИгрок &7%player% &fУдалён из &7белого &fсписока'
+  kick: '&cWHITELIST &8| &fВас &7нет &fв белом списке. &fПодать заявку &7vk.com/...'
+  usage: '&cWHITELIST &8| &fИспользование &7/awl add/del (ник) &8| /awl on/off/reload'
+  enable: '&cWHITELIST &8| &fБелый список &7включён'
+  disable: '&cWHITELIST &8| &fБелый список &7выключен'
+  reload: '&cWHITELIST &8| &fБелый список &7перезагружен'
+  del: '&cWHITELIST &8| &fИспользование &7/awl del (ник)'
+  add: '&cWHITELIST &8| &fИспользование &7/awl add (ник)'

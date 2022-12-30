@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>me.thealeksbl4ckr</groupId>
-    <artifactId>aWL</artifactId>
+    <artifactId>oWhiteList</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>aWL</name>
+    <name>oWhiteList</name>
 
     <properties>
         <java.version>1.8</java.version>

@@ -1,4 +1,4 @@
-package me.thealeksbl4ckr.aWL;
+package me.thealeksbl4ckr.oWhiteList;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -13,13 +13,23 @@ import java.util.UUID;
 
 public class DataBase {
 
-    public static MySQLWhitelist plugin;
+    public static Main plugin;
     public static Connection connection;
     public static List<String> users = new ArrayList<>();
 
     public synchronized static void openConnection(){
         try{
-            connection = DriverManager.getConnection("jdbc:mysql://"+ plugin.getConfig().getString("host") +":" + plugin.getConfig().getString("port") + "/"+ plugin.getConfig().getString("database") +"", ""+ plugin.getConfig().getString("user") +"", ""+ plugin.getConfig().getString("password") +"");
+            String host = plugin.getConfig().getString("host");
+            String port = plugin.getConfig().getString("port");
+            String database = plugin.getConfig().getString("database");
+            String user = plugin.getConfig().getString("user");
+            String password = plugin.getConfig().getString("password");
+
+            connection = DriverManager.getConnection("jdbc:mysql://"+ host +":"
+                    + port +
+                    "/"+ database +""
+                    , ""+ user +""
+                    , ""+ password +"");
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -34,11 +44,7 @@ public class DataBase {
     }
 
     public static boolean isWhitelisted(Player player){
-        if(users.contains(player.getName())) {
-            return true;
-        } else {
-            return false;
-        }
+        return users.contains(player.getName());
     }
 
     public static void addWhitelistOnline(Player player, CommandSender sender){
@@ -83,7 +89,7 @@ public class DataBase {
             closeConnection();
         }
     }
-    public static void delWhitelistOnline(Player player, CommandSender sender){
+    public static void removePlayerWhitelistOnline(Player player, CommandSender sender){
         openConnection();
         try{
             PreparedStatement sql = connection.prepareStatement("DELETE FROM `" + plugin.getConfig().getString("table") + "` WHERE `UUID`=?;");
@@ -98,7 +104,7 @@ public class DataBase {
             closeConnection();
         }
     }
-    public static void delWhitelistOffline(String player, CommandSender sender){
+    public static void removePlayerWhitelistOffline(String player, CommandSender sender){
         openConnection();
         try{
             PreparedStatement sql = connection.prepareStatement("DELETE FROM `" + plugin.getConfig().getString("table") + "` WHERE `user`=?;");
@@ -113,8 +119,33 @@ public class DataBase {
         }
     }
 
+    public synchronized static void closeDatabase() {
+        try {
+            if (connection == null && !connection.isClosed()) {
+                connection.close();
+                DataBase.users.clear();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-    public static List<String> getUsers() {
+    public synchronized static void createDatabase() {
+        try{
+            PreparedStatement sql = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `" + plugin.getConfig().getString("table") + "` (`UUID` varchar(100), `user` varchar(100)) ;");
+            sql.execute();
+
+            DataBase.getUsers();
+            Utils.log("&8| &fИгроков загружено &a" + DataBase.users.size());
+        } catch(Exception e){
+            e.printStackTrace();
+        } finally {
+            DataBase.closeConnection();
+        }
+    }
+
+
+    public static void getUsers() {
         openConnection();
         try{
             PreparedStatement sql = connection.prepareStatement("SELECT * FROM `" + plugin.getConfig().getString("table"));
@@ -128,6 +159,5 @@ public class DataBase {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return null;
     }
 }
